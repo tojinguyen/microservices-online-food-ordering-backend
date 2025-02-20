@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.learning</groupId>
-    <artifactId>online-marketplace</artifactId>
+    <artifactId>user-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>online-marketplace</name>
-    <description>online-marketplace</description>
+    <name>user-service</name>
+    <description>user-service</description>
     <url/>
     <licenses>
         <license/>
@@ -226,7 +226,7 @@
                             <schemaPaths>
                                 <param>src/main/resources/graphql-client</param>
                             </schemaPaths>
-                            <packageName>com.learning.onlinemarketplace.codegen</packageName>
+                            <packageName>com.learning.userservice.codegen</packageName>
                             <addGeneratedAnnotation>true</addGeneratedAnnotation>
                         </configuration>
                     </execution>
