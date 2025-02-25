@@ -22,6 +22,10 @@
         <module name="online-marketplace" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="product-service" target="17" />
+      <module name="store-service" target="17" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
