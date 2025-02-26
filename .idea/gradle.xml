@@ -12,6 +12,9 @@
         </option>
       </GradleProjectSettings>
       <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/commerce-core" />
+      </GradleProjectSettings>
+      <GradleProjectSettings>
         <option name="externalProjectPath" value="$PROJECT_DIR$/commerce-service" />
       </GradleProjectSettings>
       <GradleProjectSettings>
