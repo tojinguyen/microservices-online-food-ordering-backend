@@ -2,6 +2,7 @@ package com.learning.userservice.userservice.service;
 
 import com.learning.userservice.redisservice.service.BaseRedisService;
 import com.learning.userservice.userservice.dto.request.LoginRequest;
+import com.learning.userservice.userservice.dto.request.RefreshTokenRequest;
 import com.learning.userservice.userservice.dto.request.ResetPasswordRequest;
 import com.learning.userservice.userservice.dto.request.VerifyRegisterCodeRequest;
 import com.learning.userservice.userservice.dto.response.ApiResponse;
@@ -154,7 +155,7 @@ public class AuthService {
     // EndRegion
 
     // Region: Google Login
-    public void ProcessOAuthPostLogin(String email) {
+    public void processOAuthPostLogin(String email) {
         Optional<UserAccount> existUser = userRepository.findByEmail(email);
         if (existUser.isPresent()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already exists");
@@ -168,6 +169,40 @@ public class AuthService {
 
             userRepository.save(newUserAccount);
         }
+    }
+    // EndRegion
+
+    // Region: Refresh Token
+    @Transactional
+    public ApiResponse<AuthenticationResponse> refreshToken(RefreshTokenRequest refreshTokenRequest) {
+        // Extract the refresh token from the request
+        var refreshToken = refreshTokenRequest.getRefreshToken();
+
+        // Validate the refresh token
+        if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid or expired refresh token");
+        }
+
+        // Extract user details from the refresh token (e.g., user ID)
+        var userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
+
+        // Check if the user exists in the database
+        var user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        // Generate new access and refresh tokens for the user
+        var newAccessToken = jwtTokenProvider.generateAccessToken(user);
+        var newRefreshToken = jwtTokenProvider.generateRefreshToken(user);
+
+        // Create the authentication response
+        var authenticationResponse = new AuthenticationResponse(newAccessToken, newRefreshToken);
+
+        // Return the response with new tokens
+        return ApiResponse.<AuthenticationResponse>builder()
+                .success(true)
+                .message("Tokens refreshed successfully")
+                .data(authenticationResponse)
+                .build();
     }
     // EndRegion
 }

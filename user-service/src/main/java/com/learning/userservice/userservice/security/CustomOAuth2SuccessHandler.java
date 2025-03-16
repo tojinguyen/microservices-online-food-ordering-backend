@@ -26,7 +26,7 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
 
         String email = oauthUser.getAttribute("email");
 
-        authService.ProcessOAuthPostLogin(email);
+        authService.processOAuthPostLogin(email);
 
         super.onAuthenticationSuccess(request, response, authentication);
     }

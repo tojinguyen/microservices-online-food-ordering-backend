@@ -45,7 +45,6 @@ public class AuthController {
     }
     //EndRegion
 
-
     //Region:  Login
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthenticationResponse>> login(@RequestBody LoginRequest loginRequest) {
@@ -111,5 +110,13 @@ public class AuthController {
 
 
     //Region: Login with Google
+    //EndRegion
+
+
+    //Region: Refresh Token
+    @PostMapping("/refresh-token")
+    public ResponseEntity<ApiResponse<AuthenticationResponse>> refreshToken(@RequestBody RefreshTokenRequest refreshTokenRequest) {
+        return ResponseEntity.ok(authService.refreshToken(refreshTokenRequest));
+    }
     //EndRegion
 }
