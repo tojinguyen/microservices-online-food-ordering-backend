@@ -2,7 +2,6 @@ package com.learning.userservice.userservice.service;
 
 import com.learning.userservice.redisservice.service.BaseRedisService;
 import com.learning.userservice.userservice.dto.request.LoginRequest;
-import com.learning.userservice.userservice.dto.request.RefreshTokenRequest;
 import com.learning.userservice.userservice.dto.request.ResetPasswordRequest;
 import com.learning.userservice.userservice.dto.request.VerifyRegisterCodeRequest;
 import com.learning.userservice.userservice.dto.response.ApiResponse;
@@ -174,35 +173,53 @@ public class AuthService {
 
     // Region: Refresh Token
     @Transactional
-    public ApiResponse<AuthenticationResponse> refreshToken(RefreshTokenRequest refreshTokenRequest) {
-        // Extract the refresh token from the request
-        var refreshToken = refreshTokenRequest.getRefreshToken();
+    public ApiResponse<AuthenticationResponse> refreshToken(String refreshToken) {
+        try {
+            log.info("Refresh Token: {}", refreshToken);
 
-        // Validate the refresh token
-        if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid or expired refresh token");
+            // Validate the refresh token
+            if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid or expired refresh token");
+            }
+
+            // Extract user details from the refresh token (e.g., user ID)
+            var email = jwtTokenProvider.getEmailFromToken(refreshToken);
+
+            log.info("Email: {}", email);
+
+            // Check if the user exists in the database
+            var user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+            // Generate new access and refresh tokens for the user
+            var newAccessToken = jwtTokenProvider.generateAccessToken(user);
+            var newRefreshToken = jwtTokenProvider.generateRefreshToken(user);
+
+            // Create the authentication response
+            var authenticationResponse = new AuthenticationResponse(newAccessToken, newRefreshToken);
+
+            // Return the response with new tokens
+            return ApiResponse.<AuthenticationResponse>builder()
+                    .success(true)
+                    .message("Tokens refreshed successfully")
+                    .data(authenticationResponse)
+                    .build();
+
+        } catch (ResponseStatusException e) {
+            // Handle specific response status exceptions like bad request or user not found
+            log.error("Error occurred while refreshing token: {}", e.getMessage());
+            return ApiResponse.<AuthenticationResponse>builder()
+                    .success(false)
+                    .message(e.getReason())
+                    .build();
+        } catch (Exception e) {
+            // Handle generic exceptions
+            log.error("Unexpected error occurred while refreshing token: {}", e.getMessage());
+            return ApiResponse.<AuthenticationResponse>builder()
+                    .success(false)
+                    .message("An unexpected error occurred while refreshing token.")
+                    .build();
         }
-
-        // Extract user details from the refresh token (e.g., user ID)
-        var userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
-
-        // Check if the user exists in the database
-        var user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-
-        // Generate new access and refresh tokens for the user
-        var newAccessToken = jwtTokenProvider.generateAccessToken(user);
-        var newRefreshToken = jwtTokenProvider.generateRefreshToken(user);
-
-        // Create the authentication response
-        var authenticationResponse = new AuthenticationResponse(newAccessToken, newRefreshToken);
-
-        // Return the response with new tokens
-        return ApiResponse.<AuthenticationResponse>builder()
-                .success(true)
-                .message("Tokens refreshed successfully")
-                .data(authenticationResponse)
-                .build();
     }
     // EndRegion
 }

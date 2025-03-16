@@ -82,7 +82,7 @@ public class JwtUtils {
     // Generate token method used by both access and refresh token generation
     private String generateToken(String userName, long expirationMs) {
         try {
-            JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.HS512).build();
+            JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.HS256).build();
             var now = Instant.now();
             var expirationTime = now.plusMillis(expirationMs);
             JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
@@ -109,6 +109,12 @@ public class JwtUtils {
     // Validate refresh token
     public boolean validateRefreshToken(String refreshToken) {
         try {
+            if (refreshToken == null || refreshToken.isBlank()) {
+                return false;
+            }
+            if (refreshToken.startsWith("Bearer ")) {
+                refreshToken = refreshToken.substring(7);
+            }
             // Use JJWT library to parse and validate the refresh token
             Jwts.parserBuilder()
                     .setSigningKey(secretKey.getBytes(StandardCharsets.UTF_8))
@@ -123,7 +129,7 @@ public class JwtUtils {
     }
 
     // Get the user ID (or subject) from the refresh token
-    public String getUserIdFromToken(String refreshToken) {
+    public String getEmailFromToken(String refreshToken) {
         try {
             // Extract the claims from the refresh token
             var claims = Jwts.parserBuilder()

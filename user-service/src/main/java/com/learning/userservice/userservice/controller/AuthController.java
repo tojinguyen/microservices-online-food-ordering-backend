@@ -111,7 +111,7 @@ public class AuthController {
     //Region: Refresh Token
     @PostMapping("/refresh-token")
     public ResponseEntity<ApiResponse<AuthenticationResponse>> refreshToken(@RequestBody RefreshTokenRequest refreshTokenRequest) {
-        return ResponseEntity.ok(authService.refreshToken(refreshTokenRequest));
+        return ResponseEntity.ok(authService.refreshToken(refreshTokenRequest.getRefreshToken()));
     }
     //EndRegion
 
