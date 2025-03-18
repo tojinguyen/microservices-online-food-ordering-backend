@@ -1,9 +1,7 @@
 package com.learning.userservice.userservice.controller;
 
 import com.learning.userservice.userservice.dto.request.*;
-import com.learning.userservice.userservice.dto.response.ApiResponse;
-import com.learning.userservice.userservice.dto.response.AuthenticationResponse;
-import com.learning.userservice.userservice.dto.response.ResetPasswordResponse;
+import com.learning.userservice.userservice.dto.response.*;
 import com.learning.userservice.userservice.service.AuthService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,19 +20,20 @@ public class AuthController {
     //Region:  Register
     @PostMapping("/send-register-code")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<ApiResponse<String>> sendVerificationCode(@RequestBody RegisterRequest registerRequest) {
+    public ResponseEntity<ApiResponse<SendRegisterVerifyCodeResponse>> sendVerificationCode(@RequestBody RegisterRequest registerRequest) {
         try {
             authService.sendRegisterVerificationCode(registerRequest.getEmail());
-            return ResponseEntity.ok(ApiResponse.<String>builder()
+            return ResponseEntity.ok(ApiResponse.<SendRegisterVerifyCodeResponse>builder()
                     .success(true)
                     .message("Verification code sent successfully.")
-                    .data("Verification code sent to " + registerRequest.getEmail())
+                    .data(new SendRegisterVerifyCodeResponse("Verification code sent to " + registerRequest.getEmail()))
                     .build());
         } catch (Exception e) {
             log.info("Failed to send verification code: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(ApiResponse.<String>builder()
+            return ResponseEntity.badRequest().body(ApiResponse.<SendRegisterVerifyCodeResponse>builder()
                     .success(false)
                     .message("Failed to send verification code.")
+                    .data(new SendRegisterVerifyCodeResponse(e.getMessage()))
                     .build());
         }
     }
@@ -54,18 +53,19 @@ public class AuthController {
 
     //Region:  Reset Password
     @PostMapping("/forgot-password")
-    public ResponseEntity<ApiResponse<String>> forgotPassword(@RequestBody ForgotPasswordRequest email) {
+    public ResponseEntity<ApiResponse<ForgotPasswordResponse>> forgotPassword(@RequestBody ForgotPasswordRequest email) {
         try {
             authService.sendResetPasswordVerificationCode(email.getEmail());
-            return ResponseEntity.ok(ApiResponse.<String>builder()
+            return ResponseEntity.ok(ApiResponse.<ForgotPasswordResponse>builder()
                     .success(true)
                     .message("Verification code sent successfully.")
-                    .data("Verification code sent to " + email.getEmail())
+                    .data(new ForgotPasswordResponse("Verification code sent to " + email.getEmail()))
                     .build());
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.<String>builder()
+            return ResponseEntity.badRequest().body(ApiResponse.<ForgotPasswordResponse>builder()
                     .success(false)
-                    .message(e.getMessage())
+                    .message("Error when send verify code")
+                    .data(new ForgotPasswordResponse("Error when send verify code " + e.getMessage()))
                     .build());
         }
     }
@@ -91,18 +91,19 @@ public class AuthController {
 
     //Region:  Logout
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<String>> logout(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<ApiResponse<LogoutResponse>> logout(@RequestHeader("Authorization") String token) {
         try {
             authService.logout(token);
-            return ResponseEntity.ok(ApiResponse.<String>builder()
+            return ResponseEntity.ok(ApiResponse.<LogoutResponse>builder()
                     .success(true)
                     .message("Logout successfully.")
-                    .data("Logout successfully.")
+                    .data(new LogoutResponse("Logout successfully."))
                     .build());
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.<String>builder()
+            return ResponseEntity.badRequest().body(ApiResponse.<LogoutResponse>builder()
                     .success(false)
                     .message(e.getMessage())
+                    .data(new LogoutResponse(e.getMessage()))
                     .build());
         }
     }
