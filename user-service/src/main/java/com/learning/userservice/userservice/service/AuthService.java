@@ -43,8 +43,6 @@ public class AuthService {
 
     private final BaseRedisService baseRedisService;
 
-    private final ProfileService profileService;
-
     // Region: Register
     @Transactional
     public void sendRegisterVerificationCode(String email) {

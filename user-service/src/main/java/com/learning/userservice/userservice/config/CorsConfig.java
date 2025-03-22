@@ -10,13 +10,15 @@ public class CorsConfig {
     @Bean
     public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {
+            @SuppressWarnings("null")
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**") // Chỉ API cần thiết
-                        .allowedOrigins("http://localhost:8081") // Cho phép frontend
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Các method được phép
-                        .allowCredentials(true) // Nếu có cookie/token
-                        .allowedHeaders("*"); // Chấp nhận tất cả headers
+                registry.addMapping("/**")
+                        .allowedOriginPatterns("*") // More flexible than specific origins
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
+                        .allowedHeaders("*")
+                        .allowCredentials(true)
+                        .maxAge(3600); // 1 hour cache for preflight requests
             }
         };
     }
