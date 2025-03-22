@@ -1,5 +1,16 @@
 package com.learning.userservice.userservice.service;
 
+import java.time.Instant;
+import java.util.Date;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
 import com.learning.userservice.redisservice.service.BaseRedisService;
 import com.learning.userservice.userservice.dto.request.LoginRequest;
 import com.learning.userservice.userservice.dto.request.ResetPasswordRequest;
@@ -12,18 +23,9 @@ import com.learning.userservice.userservice.model.UserAccount;
 import com.learning.userservice.userservice.repository.AccountRepository;
 import com.learning.userservice.userservice.repository.VerificationCodeRepository;
 import com.learning.userservice.userservice.security.JwtUtils;
+
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.time.Instant;
-import java.util.Date;
-import java.util.Optional;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -41,8 +43,7 @@ public class AuthService {
 
     private final BaseRedisService baseRedisService;
 
-    private ProfileService profileService;
-
+    private final ProfileService profileService;
 
     // Region: Register
     @Transactional
@@ -55,8 +56,10 @@ public class AuthService {
 
     @Transactional
     public ApiResponse<AuthenticationResponse> verifyAndCreateUser(VerifyRegisterCodeRequest registerRequest) {
-        var verificationOpt = verificationCodeRepository.findByEmailAndType(registerRequest.getEmail(), VerificationType.REGISTER);
-        if (verificationOpt.isEmpty() || verificationOpt.get().getExpiresAt().isBefore(Instant.now()) || !verificationOpt.get().getCode().equals(registerRequest.getCode())) {
+        var verificationOpt = verificationCodeRepository.findByEmailAndType(registerRequest.getEmail(),
+                VerificationType.REGISTER);
+        if (verificationOpt.isEmpty() || verificationOpt.get().getExpiresAt().isBefore(Instant.now())
+                || !verificationOpt.get().getCode().equals(registerRequest.getCode())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid or expired code");
         }
 
@@ -80,7 +83,8 @@ public class AuthService {
         var refreshToken = jwtTokenProvider.generateRefreshToken(user);
         var authResponse = new AuthenticationResponse(accessToken, refreshToken);
 
-        return ApiResponse.<AuthenticationResponse>builder().success(true).message("User created successfully").data(authResponse).build();
+        return ApiResponse.<AuthenticationResponse>builder().success(true).message("User created successfully")
+                .data(authResponse).build();
     }
     // EndRegion
 
@@ -92,13 +96,16 @@ public class AuthService {
 
     @Transactional
     public ApiResponse<ResetPasswordResponse> resetPassword(ResetPasswordRequest resetPasswordRequest) {
-        var verificationOpt = verificationCodeRepository.findByEmailAndType(resetPasswordRequest.getEmail(), VerificationType.RESET_PASSWORD);
-        if (verificationOpt.isEmpty() || verificationOpt.get().getExpiresAt().isBefore(Instant.now()) || !verificationOpt.get().getCode().equals(resetPasswordRequest.getCode())) {
+        var verificationOpt = verificationCodeRepository.findByEmailAndType(resetPasswordRequest.getEmail(),
+                VerificationType.RESET_PASSWORD);
+        if (verificationOpt.isEmpty() || verificationOpt.get().getExpiresAt().isBefore(Instant.now())
+                || !verificationOpt.get().getCode().equals(resetPasswordRequest.getCode())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid or expired code");
         }
 
         // Delete the verification code
-        verificationCodeRepository.deleteByEmailAndType(resetPasswordRequest.getEmail(), VerificationType.RESET_PASSWORD);
+        verificationCodeRepository.deleteByEmailAndType(resetPasswordRequest.getEmail(),
+                VerificationType.RESET_PASSWORD);
 
         // Update the user's password
         var user = userRepository.findByEmail(resetPasswordRequest.getEmail())
@@ -127,7 +134,8 @@ public class AuthService {
         var refreshToken = jwtTokenProvider.generateRefreshToken(user);
         var authResponse = new AuthenticationResponse(accessToken, refreshToken);
 
-        return ApiResponse.<AuthenticationResponse>builder().success(true).message("Login Success").data(authResponse).build();
+        return ApiResponse.<AuthenticationResponse>builder().success(true).message("Login Success").data(authResponse)
+                .build();
     }
     // EndRegion
 

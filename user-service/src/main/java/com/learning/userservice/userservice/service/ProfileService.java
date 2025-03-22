@@ -1,15 +1,19 @@
 package com.learning.userservice.userservice.service;
 
-import com.learning.userservice.userservice.dto.request.ProfileRequest;
-import com.learning.userservice.userservice.model.UserProfile;
-import com.learning.userservice.userservice.repository.AccountRepository;
-import com.learning.userservice.userservice.repository.ProfileRepository;
-import lombok.AllArgsConstructor;
+import java.time.Instant;
+import java.util.stream.Collectors;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.Instant;
+import com.learning.userservice.userservice.dto.request.ProfileRequest;
+import com.learning.userservice.userservice.model.UserAddress;
+import com.learning.userservice.userservice.model.UserProfile;
+import com.learning.userservice.userservice.repository.AccountRepository;
+import com.learning.userservice.userservice.repository.ProfileRepository;
+
+import lombok.AllArgsConstructor;
 
 @Service
 @AllArgsConstructor
@@ -31,9 +35,16 @@ public class ProfileService {
         profile.setUserId(userId);
         profile.setName(createProfileRequest.getName());
         profile.setAvatarUrl(createProfileRequest.getAvatarUrl());
-//        profile.setAddress(createProfileRequest.getAddress());
+        profile.setAddresses(createProfileRequest.getAddresses().stream()
+                .map(addressRequest -> new UserAddress(profile, addressRequest.getStreet(), addressRequest.getCity(),
+                        addressRequest.getState(), addressRequest.getPostalCode()))
+                .collect(Collectors.toList()));
         profile.setPhoneNumber(createProfileRequest.getPhoneNumber());
-        profile.setGender(createProfileRequest.getGender());
+
+        if (createProfileRequest.getGender() != null) {
+            profile.setGender(createProfileRequest.getGender());
+        }
+
         profile.setDateOfBirth(createProfileRequest.getDateOfBirth());
         profile.setCreatedAt(Instant.now());
         profile.setUpdatedAt(Instant.now());
@@ -42,14 +53,19 @@ public class ProfileService {
     }
 
     public UserProfile getProfileByUserId(String userId) {
-        return profileRepository.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found"));
+        return profileRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found"));
     }
 
     public UserProfile updateProfile(String userId, ProfileRequest updatedProfile) {
-        var existingProfile = profileRepository.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found"));
+        var existingProfile = profileRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found"));
         existingProfile.setName(updatedProfile.getName());
         existingProfile.setAvatarUrl(updatedProfile.getAvatarUrl());
-//        existingProfile.setAddress(updatedProfile.getAddress());
+        existingProfile.setAddresses(updatedProfile.getAddresses().stream()
+                .map(addressRequest -> new UserAddress(addressRequest.getStreet(), addressRequest.getCity(),
+                        addressRequest.getState(), addressRequest.getPostalCode(), existingProfile))
+                .collect(Collectors.toList()));
         existingProfile.setPhoneNumber(updatedProfile.getPhoneNumber());
         existingProfile.setGender(updatedProfile.getGender());
         existingProfile.setDateOfBirth(updatedProfile.getDateOfBirth());
