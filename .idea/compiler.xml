@@ -9,7 +9,7 @@
           <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-configuration-processor/3.4.3/a858f31605a612bf649adfe49c000f530d5c27c/spring-boot-configuration-processor-3.4.3.jar" />
           <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.36/5a30490a6e14977d97d9c73c924c1f1b5311ea95/lombok-1.18.36.jar" />
         </processorPath>
-        <module name="food-ordering-service.main" />
+        <module name="api-gateway.main" />
       </profile>
       <profile name="Annotation profile for user-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -24,7 +24,15 @@
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="product-service" target="17" />
+      <module name="product-service.aot" target="17" />
+      <module name="product-service.aotTest" target="17" />
+      <module name="product-service.main" target="17" />
+      <module name="product-service.test" target="17" />
       <module name="store-service" target="17" />
+      <module name="store-service.aot" target="17" />
+      <module name="store-service.aotTest" target="17" />
+      <module name="store-service.main" target="17" />
+      <module name="store-service.test" target="17" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
