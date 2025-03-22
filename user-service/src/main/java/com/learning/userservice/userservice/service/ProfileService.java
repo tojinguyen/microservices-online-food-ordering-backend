@@ -31,7 +31,7 @@ public class ProfileService {
         profile.setUserId(userId);
         profile.setName(createProfileRequest.getName());
         profile.setAvatarUrl(createProfileRequest.getAvatarUrl());
-        profile.setAddress(createProfileRequest.getAddress());
+//        profile.setAddress(createProfileRequest.getAddress());
         profile.setPhoneNumber(createProfileRequest.getPhoneNumber());
         profile.setGender(createProfileRequest.getGender());
         profile.setDateOfBirth(createProfileRequest.getDateOfBirth());
@@ -49,7 +49,7 @@ public class ProfileService {
         var existingProfile = profileRepository.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found"));
         existingProfile.setName(updatedProfile.getName());
         existingProfile.setAvatarUrl(updatedProfile.getAvatarUrl());
-        existingProfile.setAddress(updatedProfile.getAddress());
+//        existingProfile.setAddress(updatedProfile.getAddress());
         existingProfile.setPhoneNumber(updatedProfile.getPhoneNumber());
         existingProfile.setGender(updatedProfile.getGender());
         existingProfile.setDateOfBirth(updatedProfile.getDateOfBirth());
