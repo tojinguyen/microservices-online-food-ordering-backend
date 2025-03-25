@@ -1,6 +1,6 @@
 package com.learning.userservice.userservice.dto.request;
 
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -20,5 +20,5 @@ public class CreateProfileRequest {
     private List<AddressRequest> addresses;
     private String phoneNumber;
     private String gender;
-    private LocalDate dateOfBirth;
+    private Instant dateOfBirth;
 }
