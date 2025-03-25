@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.learning.userservice.userservice.dto.request.ProfileRequest;
+import com.learning.userservice.userservice.dto.request.CreateProfileRequest;
 import com.learning.userservice.userservice.model.UserAddress;
 import com.learning.userservice.userservice.model.UserProfile;
 import com.learning.userservice.userservice.repository.AccountRepository;
@@ -20,8 +20,9 @@ import lombok.AllArgsConstructor;
 public class ProfileService {
     private final ProfileRepository profileRepository;
     private final AccountRepository accountRepository;
+    private final GoogleCloudStorageService googleCloudStorageService;
 
-    public UserProfile createProfile(String userId, ProfileRequest createProfileRequest) {
+    public UserProfile createProfile(String userId, CreateProfileRequest createProfileRequest) {
         var userAccountOpt = accountRepository.findById(userId);
         if (userAccountOpt.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User Account not found");
@@ -31,10 +32,12 @@ public class ProfileService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Profile already exists");
         }
 
+        var avtUrl = googleCloudStorageService.uploadFile(createProfileRequest.getAvatar());
+
         var profile = new UserProfile();
         profile.setUserId(userId);
         profile.setName(createProfileRequest.getName());
-        profile.setAvatarUrl(createProfileRequest.getAvatarUrl());
+        profile.setAvatarUrl(avtUrl);
         profile.setAddresses(createProfileRequest.getAddresses().stream()
                 .map(addressRequest -> new UserAddress(profile, addressRequest.getStreet(), addressRequest.getCity(),
                         addressRequest.getState(), addressRequest.getPostalCode()))
@@ -55,22 +58,6 @@ public class ProfileService {
     public UserProfile getProfileByUserId(String userId) {
         return profileRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found"));
-    }
-
-    public UserProfile updateProfile(String userId, ProfileRequest updatedProfile) {
-        var existingProfile = profileRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found"));
-        existingProfile.setName(updatedProfile.getName());
-        existingProfile.setAvatarUrl(updatedProfile.getAvatarUrl());
-        existingProfile.setAddresses(updatedProfile.getAddresses().stream()
-                .map(addressRequest -> new UserAddress(addressRequest.getStreet(), addressRequest.getCity(),
-                        addressRequest.getState(), addressRequest.getPostalCode(), existingProfile))
-                .collect(Collectors.toList()));
-        existingProfile.setPhoneNumber(updatedProfile.getPhoneNumber());
-        existingProfile.setGender(updatedProfile.getGender());
-        existingProfile.setDateOfBirth(updatedProfile.getDateOfBirth());
-        profileRepository.save(existingProfile);
-        return existingProfile;
     }
 
     public void deleteProfile(String userId) {

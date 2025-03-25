@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.learning.userservice.userservice.dto.request.ProfileRequest;
+import com.learning.userservice.userservice.dto.request.CreateProfileRequest;
 import com.learning.userservice.userservice.dto.response.ApiResponse;
 import com.learning.userservice.userservice.model.UserProfile;
 import com.learning.userservice.userservice.service.ProfileService;
@@ -24,7 +24,7 @@ public class ProfileController {
     private final ProfileService profileService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<UserProfile>> createProfile(@RequestBody ProfileRequest createProfileRequest) {
+    public ResponseEntity<ApiResponse<UserProfile>> createProfile(@RequestBody CreateProfileRequest createProfileRequest) {
         try {
             var profile = profileService.createProfile(createProfileRequest.getUserId(), createProfileRequest);
             return ResponseEntity.ok(ApiResponse.<UserProfile>builder()
@@ -53,24 +53,6 @@ public class ProfileController {
             return ResponseEntity.badRequest().body(ApiResponse.<UserProfile>builder()
                     .success(false)
                     .message("Failed to retrieve profile.")
-                    .build());
-        }
-    }
-
-    @PutMapping("/{userId}")
-    public ResponseEntity<ApiResponse<UserProfile>> updateProfile(@PathVariable String userId,
-            @RequestBody ProfileRequest updatedProfile) {
-        try {
-            var profile = profileService.updateProfile(userId, updatedProfile);
-            return ResponseEntity.ok(ApiResponse.<UserProfile>builder()
-                    .success(true)
-                    .message("Profile updated successfully.")
-                    .data(profile)
-                    .build());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.<UserProfile>builder()
-                    .success(false)
-                    .message("Failed to update profile.")
                     .build());
         }
     }
