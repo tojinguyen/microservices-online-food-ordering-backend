@@ -1,21 +1,18 @@
 package com.learning.userservice.userservice.security;
 
 import com.learning.userservice.userservice.model.UserAccount;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.JWSObject;
-import com.nimbusds.jose.Payload;
-import com.nimbusds.jose.crypto.MACSigner;
-import com.nimbusds.jwt.JWTClaimsSet;
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.nio.charset.StandardCharsets;
+import java.security.Key;
 import java.time.Instant;
 import java.util.Date;
 
@@ -42,67 +39,19 @@ public class JwtUtils {
         return generateToken(user.getEmail(), refreshTokenValidityInMilliseconds);
     }
 
-    // Validate general JWT token
-    public boolean validateToken(String token) {
+    public boolean validateToken(String token, UserDetails userDetails) {
         try {
-            Jwts.parserBuilder()
+            var claims = Jwts.parserBuilder()
                     .setSigningKey(secretKey.getBytes(StandardCharsets.UTF_8))
                     .build()
-                    .parseClaimsJws(token);
-            return true;
-        } catch (SecurityException ex) {
-            log.info("JWT signature không hợp lệ: {}", ex.getMessage());
-        } catch (MalformedJwtException ex) {
-            log.info("Token không đúng định dạng: {}", ex.getMessage());
-        } catch (ExpiredJwtException ex) {
-            log.info("Token đã hết hạn: {}", ex.getMessage());
-        } catch (UnsupportedJwtException ex) {
-            log.info("Token không được hỗ trợ: {}", ex.getMessage());
-        } catch (IllegalArgumentException ex) {
-            log.info("Token rỗng hoặc không hợp lệ: {}", ex.getMessage());
-        }
-        return false;
-    }
+                    .parseClaimsJws(token)
+                    .getBody();
 
-    // Get expiration date from token
-    public Instant getExpirationDateFromToken(String token) {
-        if (token.startsWith("Bearer ")) {
-            token = token.substring(7);
-        }
-
-        var claims = Jwts.parserBuilder()
-                .setSigningKey(secretKey.getBytes(StandardCharsets.UTF_8))
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-
-        return claims.getExpiration().toInstant();
-    }
-
-    // Generate token method used by both access and refresh token generation
-    private String generateToken(String userName, long expirationMs) {
-        try {
-            JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.HS256).build();
-            var now = Instant.now();
-            var expirationTime = now.plusMillis(expirationMs);
-            JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                    .subject(userName)
-                    .issuer("OnlineMarketplace")
-                    .issueTime(Date.from(now))
-                    .expirationTime(Date.from(expirationTime))
-                    .claim("role", "USER")
-                    .build();
-
-            var payload = new Payload(jwtClaimsSet.toJSONObject());
-            var jwsObject = new JWSObject(header, payload);
-
-            jwsObject.sign(new MACSigner(secretKey));
-
-            return jwsObject.serialize();
-        }
-        catch (Exception e) {
-            log.error("Failed to generate token", e);
-            throw new RuntimeException("Failed to generate token with message: " + e.getMessage());
+            String username = claims.getSubject();
+            return (username.equals(userDetails.getUsername()) && !claims.getExpiration().before(new Date()));
+        } catch (JwtException ex) {
+            log.error("Invalid or expired token: {}", ex.getMessage());
+            return false;
         }
     }
 
@@ -128,8 +77,23 @@ public class JwtUtils {
         }
     }
 
+    // Get expiration date from token
+    public Instant getExpirationDateFromToken(String token) {
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+
+        var claims = Jwts.parserBuilder()
+                .setSigningKey(secretKey.getBytes(StandardCharsets.UTF_8))
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        return claims.getExpiration().toInstant();
+    }
+
     // Get the user ID (or subject) from the refresh token
-    public String getEmailFromToken(String refreshToken) {
+    public String extractUsername(String refreshToken) {
         try {
             // Extract the claims from the refresh token
             var claims = Jwts.parserBuilder()
@@ -142,7 +106,23 @@ public class JwtUtils {
             return claims.getSubject();
         } catch (JwtException ex) {
             log.error("Failed to extract user ID from token: {}", ex.getMessage());
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid or expired refresh token");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or expired refresh token");
         }
+    }
+
+    // Generate token method used by both access and refresh token generation
+    private String generateToken(String userName, long expirationMs) {
+        var now = Instant.now();
+        var expirationTime = now.plusMillis(expirationMs);
+
+        Key key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+        return Jwts.builder()
+                .setSubject(userName)
+                .setIssuer("OnlineMarketplace")
+                .setIssuedAt(Date.from(now))
+                .setExpiration(Date.from(expirationTime))
+                .claim("role", "USER")
+                .signWith(key)
+                .compact();
     }
 }

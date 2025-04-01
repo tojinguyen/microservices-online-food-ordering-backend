@@ -144,9 +144,9 @@ public class AuthService {
             token = token.substring(7);
         }
 
-        if (!jwtTokenProvider.validateToken(token)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid token");
-        }
+//        if (!jwtTokenProvider.validateToken(token)) {
+//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid token");
+//        }
 
         var expirationDate = jwtTokenProvider.getExpirationDateFromToken(token);
         long ttl = Date.from(expirationDate).getTime() - System.currentTimeMillis();
@@ -189,7 +189,7 @@ public class AuthService {
             }
 
             // Extract user details from the refresh token (e.g., user ID)
-            var email = jwtTokenProvider.getEmailFromToken(refreshToken);
+            var email = jwtTokenProvider.extractUsername(refreshToken);
 
             log.info("Email: {}", email);
 
